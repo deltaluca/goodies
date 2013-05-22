@@ -49,7 +49,7 @@ abstract Maybe<T>(Null<T>) from Null<T> {
     /*
      * Extract possibly null/non-existant item from head of array.
      */
-    public #if !macro inline #end static function listToMaybe<T>(xs:Array<Null<T>>):Maybe<T> {
+    public #if !macro inline #end static function listToMaybe<T>(xs:Array<T>):Maybe<T> {
         // macro in macro fails with inline ^
         Assert.assert(xs != null);
         return if (xs.length == 0) null else new Maybe<T>(xs[0]);
