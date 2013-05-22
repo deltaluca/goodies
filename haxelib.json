@@ -1,0 +1,10 @@
+{
+    "name":         "goodies",
+    "url":          "https://github.com/deltaluca/goodies",
+    "license":      "MIT",
+    "tags":         ["cross"],
+    "description":  "Assorted little things that feel silly in their own lib.",
+    "version":      "local",
+    "releasenote":  "Maybe abstract + build macro environment, Assertions, Complex discrete fourier transforms",
+    "contributors": ["deltaluca"]
+}
