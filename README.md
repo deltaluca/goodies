@@ -226,13 +226,13 @@ class N implements MaybeEnv implements LazyEnv implements Builder {
     public function new() {}
 }
 
-class Main implements MaybeEnv implements LazyEnv {
+class Main {
     static function main() {
         var n = new N();
         trace(n.getMetric());
         n.metric([1,3,4]);  // runtime error, metric[0] != 1 assertion
         trace(n.getMetric());
-        n.metric(null);     // runtime error, assinging null to non Maybe type
+        n.metric(null);     // runtime error, assigning null to non Maybe type
         trace(n.getMetric());
     }
 }
