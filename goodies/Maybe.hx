@@ -39,7 +39,7 @@ abstract Maybe<T>(Null<T>) from Null<T> {
      *
      * x.runOr(f, y) == x.run(f, function () return y);
      */
-    public inline function runOr<S>(eval:T->S, def:S      ):S return if (this==null) def   else eval(untyped this);
+    public inline function runOr<S>(eval:T->S, def:S=null):S return if (this==null) def   else eval(untyped this);
 
     /**
      * Map eval function to value if non-null, and run default function otherwise.
@@ -86,6 +86,25 @@ abstract Maybe<T>(Null<T>) from Null<T> {
         }
         return ret;
     }
+
+    public static function liftM<T,S>(f:T->S):Maybe<T>->Maybe<S> return
+        function (x) return x.runOr(f);
+    public static function liftM2<T,S,R>(f:T->S->R):Maybe<T>->Maybe<S>->Maybe<R> return
+        function (x, y) return x.runOr(
+        function (x) return y.runOr(f.bind(x)));
+    public static function liftM3<T,S,R,Q>(f:T->S->R->Q):Maybe<T>->Maybe<S>->Maybe<R>->Maybe<Q> return
+        function (x, y, z) return x.runOr(
+        function (x) return y.runOr(
+        function (y) return z.runOr(f.bind(x,y))));
+    public static function liftM4<T,S,R,Q,P>(f:T->S->R->Q->P):Maybe<T>->Maybe<S>->Maybe<R>->Maybe<Q>->Maybe<P> return
+        function (x, y, z, w) return x.runOr(
+        function (x) return y.runOr(
+        function (y) return z.runOr(
+        function (z) return w.runOr(f.bind(x,y,z)))));
+
+    public static function call<T>(f:Maybe<Void->T>) return liftM(Func.call)(f);
+    public static function call1<T,S>(f:Maybe<T->S>, x:Maybe<T>) return liftM2(Func.call1)(f, x);
+    public static function call2<T,S,R>(f:Maybe<T->S->R>, x:Maybe<T>, y:Maybe<S>) return liftM3(Func.call2)(f, x, y);
 
     public inline function toString() {
         var x:T = untyped this;

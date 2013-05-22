@@ -53,7 +53,6 @@ class LazyEnvImpl {
             }
         }
         fields = fields.concat(gields);
-        trace("\n"+fields.map(new haxe.macro.Printer().printField).join("\n"));
         return fields;
     }
 #end
