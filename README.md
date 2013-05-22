@@ -10,6 +10,7 @@ Collection of little Haxe goodies I don't yet have an official place for.
 [Maybe](#Maybe)  
 [Lazy](#Lazy)  
 [Builder](#Builder)
+[Func](#Func)
 
 <a name="FFT"/>
 ## FFT
@@ -117,6 +118,17 @@ abstract Maybe<T>(Null<T>) from Null<T> {
     // Map function over list of values, collecting non-null results.
     // Maybe.mapMaybe(Maybe.listToMaybe, [[10],[],[],[20]]) = [10,20]
     static function mapMaybe<T,S>(eval:T->Maybe<S>, xs:Array<T>):Array<S>;
+    
+    // Lift a standard N arg function into the Maybe monad
+    static function liftM<T,S>(f:T->S):Maybe<T>->Maybe<S>;
+    static function liftM2<T,S,R>(f:T->S->R):Maybe<T>->Maybe<S>->Maybe<R>;
+    static function liftM3<T,S,R,Q>(f:T->S->R->Q):Maybe<T>->Maybe<S>->Maybe<R>->Maybe<Q>
+    static function liftM4<T,S,R,Q,P>(f:T->S->R->Q->P):Maybe<T>->Maybe<S>->Maybe<R>->Maybe<Q>->Maybe<P>;
+    
+    // Call a maybe functino with given arity.
+    static function call<T>(f:Maybe<Void->T>):Maybe<T>;
+    static function call2<T,S>(f:Maybe<T->S>, x:Maybe<T>):Maybe<S>;
+    static function call2<T,S,R>(f:Maybe<T->S->R>, x:Maybe<T>, y:Maybe<S>):Maybe<R>;
 }
 ```
 
@@ -244,3 +256,14 @@ Currently there's one other mutator for ```@:builder``` which is:
 ```
 
 which can be combined with ```react``` as two arguments. The ```ret``` mutator changes the Type of the property getter from the parent Type to the one given as argument (Can be useful sometimes).
+
+
+<a name="Func"/>
+## Func
+
+```cs
+// Call methods of given arity.
+Func.call0<S>(f:Void->S):S;
+Func.call1<S,T>(f:S->T, x:S):T;
+Func.call2<S,T,Q>(f:S->T->Q, x:S, y:T):Q;
+```
