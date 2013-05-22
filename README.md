@@ -215,7 +215,28 @@ var pizza = new Pizza().size(20).topping(Jalapenos);
 trace(pizza.getSize()); // 20
 ```
 
-This can be combined with ```Maybe```, though I've no idea how it'd work together with ```@:lazyVar```!
+This can be combined with ```Maybe``` and ```Lazy```
+
+```cs
+class N implements MaybeEnv implements LazyEnv implements Builder {
+    @:lazyVar @:builder(react=function (metric) {
+        Assert.assert(metric[0] != 1);
+    }) var metric:Array<Int> = [0,1,2];
+
+    public function new() {}
+}
+
+class Main implements MaybeEnv implements LazyEnv {
+    static function main() {
+        var n = new N();
+        trace(n.getMetric());
+        n.metric([1,3,4]);  // runtime error, metric[0] != 1 assertion
+        trace(n.getMetric());
+        n.metric(null);     // runtime error, assinging null to non Maybe type
+        trace(n.getMetric());
+    }
+}
+```
 
 Currently there's one other mutator for ```@:builder``` which is:
 ```cs
