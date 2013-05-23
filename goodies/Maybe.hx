@@ -143,10 +143,10 @@ class MaybeEnvImpl {
                     if (t == null && arg.value != null)
                         t = Context.toComplexType(Context.typeof(arg.value));
 
-                    var isMaybe = t != null && switch(t) {
+                    var isMaybe = (t != null && switch(t) {
                         case TPath({name:"Maybe"}): true;
                         default: false;
-                    };
+                    }) || (arg.name == "_" && arg.type == null);
 
                     var nullArg = (arg.value != null && switch (arg.value) {
                         case macro null: true;
@@ -166,7 +166,7 @@ class MaybeEnvImpl {
                     if (t != null && baseType(t)) continue;
 
 #if debug
-                    var err = 'Maybe Error - ${field.name}: Passing null for non-Maybe type argument "${arg.name}"';
+                    var err = 'Maybe Error - ${field.name}: Passing null for non-Maybe type argument "${arg.name}":${field.pos}';
                     if (!intf) {
                         if (t == null || !baseType(t)) {
                             var check = macro if ($i{arg.name} == null) throw $v{err};

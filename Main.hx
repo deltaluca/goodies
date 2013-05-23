@@ -5,23 +5,19 @@ import goodies.Builder;
 import goodies.Func;
 using goodies.Assert;
 
+import ogl.GLM;
 
-class Main implements MaybeEnv implements LazyEnv {
-    static var enter:Maybe<Void->Void> = null;
-    static function tryit() {
-        enter.runOr(Func.call0);
+class Main implements MaybeEnv implements LazyEnv implements Builder {
+    @:builder public var name:Maybe<Vec2> = null;
+    public function get():Vec2 return [1,2];
+    public function new() {
+        trace(getName());
+        name([10,20]);
+        trace(getName());
+        name(null);
+        trace(getName());
+        name(get());
+        trace(getName());
     }
-    static function main() {
-        tryit();
-        enter = function () trace("hi");
-        tryit();
-
-        function add(a:Int, b:Int, c:Int, d:Int) return a+b+c+d;
-
-        var maybeAdd = Maybe.liftM4(add);
-        trace(maybeAdd(10, 20, 30, 40));
-        trace(maybeAdd(10, null, 30, 40));
-        trace(maybeAdd(null, 20, 30, 40));
-        trace(maybeAdd(null, null, 30, 40));
-    }
+    static function main() new Main();
 }

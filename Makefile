@@ -1,5 +1,5 @@
 all:
-	haxe -main Main -swf main.swf -debug -D assertions
+	haxe -main Main -swf main.swf -debug -D assertions -lib ogl
 	debugfp main.swf
 
 .PHONY: haxelib
