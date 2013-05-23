@@ -39,7 +39,7 @@ abstract Maybe<T>(Null<T>) from Null<T> {
      *
      * x.runOr(f, y) == x.run(f, function () return y);
      */
-    public inline function runOr<S>(eval:T->S, def:S=null):S return if (this==null) def   else eval(untyped this);
+    public inline function runOr<S>(eval:T->S, def:S):S return if (this==null) def   else eval(untyped this);
 
     /**
      * Map eval function to value if non-null, and run default function otherwise.
