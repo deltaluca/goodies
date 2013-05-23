@@ -37,6 +37,7 @@ class MacroUtils {
     }
 
     public static function hasMeta(f:Field, name:String):Maybe<Array<Expr>> {
+        if (f.meta == null) return null;
         for (m in f.meta) if (m.name == name) return m.params;
         return null;
     }

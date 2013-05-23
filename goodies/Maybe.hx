@@ -46,6 +46,8 @@ abstract Maybe<T>(Null<T>) from Null<T> {
      */
     public inline function run  <S>(eval:T->S, def:Void->S):S return if (this==null) def() else eval(untyped this);
 
+    public inline function bool() return this != null;
+
     /*
      * Extract possibly null/non-existant item from head of array.
      */
