@@ -5,5 +5,5 @@ all:
 .PHONY: haxelib
 haxelib:
 	rm -f goodies.zip
-	zip -r goodies goodies haxelib.json -x \*goodies/*.swp\*
+	zip -r goodies goodies haxelib.json -x \*goodies/*.sw[op]\*
 	haxelib local goodies.zip
