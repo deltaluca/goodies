@@ -17,6 +17,8 @@ import goodies.Assert;
 abstract Maybe<T>(Null<T>) from Null<T> {
     public inline function new(x:Null<T>) this = x;
 
+    @:from public static inline function fromMM<T>(x:Maybe<Maybe<T>>):Maybe<T> return untyped x;
+
     /**
      * (Unsafely) extract underlying value.
      * in #debug this will throw an error at runtime.
@@ -109,6 +111,7 @@ abstract Maybe<T>(Null<T>) from Null<T> {
     public static function call<T>(f:Maybe<Void->T>) return liftM(Func.call)(f);
     public static function call1<T,S>(f:Maybe<T->S>, x:Maybe<T>) return liftM2(Func.call1)(f, x);
     public static function call2<T,S,R>(f:Maybe<T->S->R>, x:Maybe<T>, y:Maybe<S>) return liftM3(Func.call2)(f, x, y);
+    public static function call3<T,S,R,Q>(f:Maybe<T->S->R->Q>, x:Maybe<T>, y:Maybe<S>, z:Maybe<R>) return liftM4(Func.call3)(f, x, y, z);
 
     public inline function toString() {
         var x:T = untyped this;
