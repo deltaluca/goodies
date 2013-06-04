@@ -4,7 +4,7 @@
     "license":      "MIT",
     "tags":         ["cross"],
     "description":  "Assorted little things that feel silly in their own lib.",
-    "version":      "0.1.0",
-    "releasenote":  "Maybe abstract + build macro environment, Assertions, Complex DFTs, Builder pattern macros, Lazy instantiatin",
+    "version":      "0.1.1",
+    "releasenote":  "Small additions and fixes.",
     "contributors": ["deltaluca"]
 }

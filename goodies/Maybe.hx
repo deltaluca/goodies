@@ -23,9 +23,10 @@ abstract Maybe<T>(Null<T>) from Null<T> {
      * (Unsafely) extract underlying value.
      * in #debug this will throw an error at runtime.
      */
-    public #if !macro inline #end function extract():T {
-        // macro in macro fails with inline ^
-        Assert.assert(this != null);
+    public inline function extract():T {
+#if debug
+        if (this == null) throw "Cannot extract from Nothing";
+#end
         return untyped this;
     }
 
@@ -107,11 +108,18 @@ abstract Maybe<T>(Null<T>) from Null<T> {
         function (x) return y.bind(
         function (y) return z.bind(
         function (z) return w.bind(cast f.bind(x,y,z)))));
+    public static function liftM5<T,S,R,Q,P,N>(f:T->S->R->Q->P->N):Maybe<T>->Maybe<S>->Maybe<R>->Maybe<Q>->Maybe<P>->Maybe<N> return
+        function (x, y, z, w, t) return x.bind(
+        function (x) return y.bind(
+        function (y) return z.bind(
+        function (z) return w.bind(
+        function (w) return t.bind(cast f.bind(x,y,z,w))))));
 
     public static function call<T>(f:Maybe<Void->T>) return liftM(Func.call)(f);
     public static function call1<T,S>(f:Maybe<T->S>, x:Maybe<T>) return liftM2(Func.call1)(f, x);
     public static function call2<T,S,R>(f:Maybe<T->S->R>, x:Maybe<T>, y:Maybe<S>) return liftM3(Func.call2)(f, x, y);
     public static function call3<T,S,R,Q>(f:Maybe<T->S->R->Q>, x:Maybe<T>, y:Maybe<S>, z:Maybe<R>) return liftM4(Func.call3)(f, x, y, z);
+    public static function call4<T,S,R,Q,P>(f:Maybe<T->S->R->Q->P>, x:Maybe<T>, y:Maybe<S>, z:Maybe<R>, w:Maybe<Q>) return liftM5(Func.call4)(f, x, y, z, w);
 
     public inline function toString() {
         var x:T = untyped this;
