@@ -60,7 +60,7 @@ class CoalescePrint {
             ret + '   \033[31;1m]\033[m*\033[32;1m$n\033[m';
         }
     }
-    public static inline var limit:Int = 10; // max pattern search depth.
+    static inline var limit:Int = 20; // max pattern search depth.
     static var es:Array<Log> = [];
     static var m = new Mutex();
     static public function clear() {
@@ -101,6 +101,7 @@ class CoalescePrint {
 
             pattern.unshift(es[es.length-(++size)]);
         }
+        while (es.length > limit) es.shift();
         m.release();
     }
 }
