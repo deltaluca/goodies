@@ -68,7 +68,7 @@ class CoalescePrint {
         es = [];
         m.release();
     }
-    static public function log(n:String) {
+    static public function log(n:String, ?inf:haxe.PosInfos) {
         m.acquire();
         var e = EUnit(n);
         Lib.println(print(e));
