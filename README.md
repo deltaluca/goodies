@@ -3,14 +3,16 @@ goodies
 
 Collection of little Haxe goodies I don't yet have an official place for.
 
-##### Table of Contents  
-[FFT](#FFT)  
-[Assert](#Assert)  
-[MacroUtils](#MacroUtils)  
-[Maybe](#Maybe)  
-[Lazy](#Lazy)  
-[Builder](#Builder)
-[Func](#Func)
+#### Table of Contents  
+- [FFT](#FFT)  
+- [Assert](#Assert)  
+- [MacroUtils](#MacroUtils)  
+- [Maybe](#Maybe)  
+- [Lazy](#Lazy)  
+- [Builder](#Builder)
+- [Tuple](#Tuple)
+- [Func](#Func)
+- [CoalescePrint](#CoalescePrint)
 
 <a name="FFT"/>
 ## FFT
@@ -257,13 +259,145 @@ Currently there's one other mutator for ```@:builder``` which is:
 
 which can be combined with ```react``` as two arguments. The ```ret``` mutator changes the Type of the property getter from the parent Type to the one given as argument (Can be useful sometimes).
 
+<a name="Tuple"/>
+## Tuple
+
+Tuple abstract types.
+
+```cs
+// Tuple.T2,T3,T4,T5
+var v = new T2(10, "hello");
+trace(v); // (10, "hello")
+trace(v.v0); // 10
+trace(v.v1); // "hello"
+```
+
 
 <a name="Func"/>
 ## Func
 
 ```cs
-// Call methods of given arity.
-Func.call0<S>(f:Void->S):S;
-Func.call1<S,T>(f:S->T, x:S):T;
-Func.call2<S,T,Q>(f:S->T->Q, x:S, y:T):Q;
+// General operations
+Func.id : S -> S
+Func.flip : (S->T->R) -> (T->S->R)
+Func.dot : (T->R) -> (S->T) -> (S->R) // Haskell (.)
+
+Func.curry2 : (S->T->R) -> (S->(T->R))
+Func.curry3 : (S->T->R->P) -> (S->(T->(R->P)))
+Func.curry4 : (S->T->R->P->Q) -> (S->(T->(R->(P->Q))))
+
+Func.uncurry2 : (S->(T->R)) -> (S->T->R)
+Func.uncurry3 : (S->(T->(R->P))) -> (S->T->R->P)
+Func.uncurry4 : (S->(T->(R->(P->Q)))) -> (S->T->R->P->Q)
+
+// Array operations
+Func.lift : (S->T) -> (Array<S>->Array<T>) // Func.map.bind(f) :: Func.curry2(Func.map)(f)
+
+Func.map  : (S->T) -> Array<S> -> Array<T>
+Func.iter : (S->T) -> Array<S> -> Void // map with no return
+Func.intersperse : S -> Array<S> -> Array<S>
+Func.intercalate : Array<S> -> Array<Array<S>> -> Array<S>
+Func.transpose : Array<Array<S>> -> Array<Array<S>>
+Func.subsequences : Array<S> -> Array<Array<S>>
+
+Func.foldl  : (S->T->S) -> S -> Array<T> -> S
+Func.foldr  : (S->T->T) -> T -> Array<S> -> T
+Func.foldl1 : (S->S->S) -> Array<S> -> S
+Func.foldr1 : (S->S->S) -> Array<S> -> S
+
+Func.concat : Array<Array<S>> -> Array<S>
+Func.concatMap : (S->Array<T>) -> Array<S> -> Array<T>
+
+Func.and : Array<Bool> -> Bool
+Func.or  : Array<Bool> -> Bool
+Func.all : (S->Bool) -> Array<S> -> Bool
+Func.any : (S->Bool) -> Array<S> -> Bool
+
+Func.sum     : Array<Int> -> Int
+Func.product : Array<Int> -> Int
+Func.maximum : Array<Int> -> Int
+Func.minimum : Array<Int> -> Int
+
+Func.scanl  : (S->T->S) -> S -> Array<T> -> Array<S>
+Func.scanr  : (S->T->T) -> T -> Array<S> -> Array<T>
+Func.scanl1 : (S->S->S) -> Array<S> -> Array<S>
+Func.scanr1 : (S->S->S) -> Array<S> -> Array<S>
+
+Func.mapAccumL : (S->T->T2<S,R>) -> S -> Array<T> -> T2<S, Array<R>>
+Func.mapAccumR : (S->T->T2<S,R>) -> S -> Array<T> -> T2<S, Array<R>>
+
+Func.replicate : Int -> S -> Array<S>
+
+Func.unfoldr : (T->Maybe<T2<S,T>>) -> T -> Array<S>
+
+Func.take : Int -> Array<S> -> Array<S>
+Func.drop : Int -> Array<S> -> Array<S>
+Func.splitAt : Int -> Array<S> -> T2<Array<S>,Array<S>>
+Func.takeWhile : (S->Bool) -> Array<S> -> Array<S>
+Func.dropWhile : (S->Bool) -> Array<S> -> Array<S>
+Func.dropWhileEnd : (S->Bool) -> Array<S> -> Array<S>
+Func.span : (S->Bool) -> Array<S> -> T2<Array<S>,Array<S>>
+Func._break : (S->Bool) -> Array<S> -> T2<Array<S>,Array<S>>
+Func.stripPrefix : Array<S> -> Array<S> -> Maybe<Array<S>>
+Func.group : Array<S> -> Array<Array<S>>
+Func.inits : Array<S> -> Array<Array<S>>
+Func.tails : Array<S> -> Array<Array<S>>
+
+Func.find : (S->Bool) -> Array<S> -> Maybe<S>
+Func.filter : (S->Bool) -> Array<S> -> Array<S>
+Func.partition : (S->Bool) -> Array<S> -> T2<Array<S>, Array<S>>
+
+Func.zip : Array<S> -> Array<T> -> Array<T2<S,T>
+Func.zip3 : Array<S> -> Array<T> -> Array<R> -> Array<T3<S,T,R>>
+Func.zip4 : Array<S> -> Array<T> -> Array<R> -> Array<P> -> Array<T4<S,T,R,P>>
+Func.zip5 : Array<S> -> Array<T> -> Array<R> -> Array<P> -> Array<Q> -> Array<T5<S,T,R,P,Q>>
+
+Func.zipWith : (S->T->O) -> Array<S> -> Array<T> -> Array<O>
+Func.zipWith3 : (S->T->R->O) -> Array<S> -> Array<T> -> Array<R> -> Array<O>
+Func.zipWith4 : (S->T->R->P->O) -> Array<S> -> Array<T> -> Array<R> -> Array<P> -> Array<O>
+Func.zipWith5 : (S->T->R->P->Q->O) -> Array<S> -> Array<T> -> Array<R> -> Array<P> -> Array<Q> -> Array<O>
+
+Func.unzip : Array<T2<S,T>> -> T2<Array<S>,Array<T>>
+Func.unzip3 : Array<T3<S,T,R>> -> T3<Array<S>,Array<T>,Array<R>>
+Func.unzip4 : Array<T4<S,T,R,P>> -> T4<Array<S>,Array<T>,Array<R>,Array<P>>
+Func.unzip5 : Array<T5<S,T,R,P,Q>> -> T5<Array<S>,Array<T>,Array<R>,Array<P>,Array<Q>>
+
+Func.nub : Array<S> -> Array<S>
+Func.delete : S -> Array<S> -> Array<S>
+Func.subtract : Array<S> -> Array<S> -> Array<S> // Haskell (\\)
+Func.union : Array<S> -> Array<S> -> Array<S>
+Func.intersect : Array<S> -> Array<S> -> Array<S>
+
+
+// Function call wrappers
+Func.call  : (Void->S) -> S
+Func.call1 : (S->T) -> S -> T
+Func.call2 : (S->T->R) -> S -> T -> R
+Func.call3 : (S->T->R->Q) -> S -> T -> R -> Q
+Func.call4 : (S->T->R->Q->P) -> S -> T -> R -> Q -> P
 ```
+
+<a name="CoalescePrint"/>
+## CoalescePrint
+
+Replacement for trace for neko/cpp targets. Uses ANSI escape codes to 'delete' lines in stdout and collect repeat traces into groups (up to a limited look-back)
+
+```cs
+haxe.Log.trace = CoalescePrint.log;
+trace("Hello");
+trace("Hi there!");
+trace("Hi there!");
+trace("Hello");
+trace("Hi there!");
+trace("Hi there!");
+trace("lol");
+```
+
+results in (when console supports ANSI codes):
+```cs
+[   Hello
+    [   Hi there!   ]*2  ]*2
+lol    
+```
+
+with braces in red, and repeat counts in green.
