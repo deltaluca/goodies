@@ -4,15 +4,17 @@ goodies
 Collection of little Haxe goodies I don't yet have an official place for.
 
 #### Table of Contents  
-- [FFT](#FFT)  
-- [Assert](#Assert)  
-- [MacroUtils](#MacroUtils)  
-- [Maybe](#Maybe)  
-- [Lazy](#Lazy)  
-- [Builder](#Builder)
-- [Tuple](#Tuple)
-- [Func](#Func)
-- [CoalescePrint](#CoalescePrint)
+- [FFT](#FFT)  Fast-Fourier Transforms for complex Vector data.
+- [Assert](#Assert)  Runtime Assertions via macros.
+- [MacroUtils](#MacroUtils)  Utilities to complement writing Macros.
+- [Maybe](#Maybe)  Maybe abstract type for null safety + Build macro for runtime assertion checking of usage.
+- [Lazy](#Lazy)  Lazily allocated member variables, with safety checks via build macros.
+- [Builder](#Builder)  Builder pattern for member variables via build macros.
+- [Tuple](#Tuple)  Tuple abstract types.
+- [Func](#Func)    Functional programming module (Mostly revolving around extending Array type)
+- [CoalescePrint](#CoalescePrint) Neko/C++ Printing utility for coalesced logs.
+- [Shack](#Shack)  Stack allocated vectors/matrices via build macros.
+- [Fixed16](#Fixed16) Abstract type for 16.16 fixed-point numerical values and ops.
 
 <a name="FFT"/>
 ## FFT
@@ -268,6 +270,7 @@ Tuple abstract types.
 // Tuple.T2,T3,T4,T5
 var v = new T2(10, "hello");
 trace(v); // (10, "hello")
+v = T2.make(10, "hello");
 trace(v.v0); // 10
 trace(v.v1); // "hello"
 ```
@@ -286,15 +289,27 @@ Func.curry2 : (S->T->R) -> (S->(T->R))
 Func.curry3 : (S->T->R->P) -> (S->(T->(R->P)))
 Func.curry4 : (S->T->R->P->Q) -> (S->(T->(R->(P->Q))))
 
+Func.tuple2 : (S->T->R) -> (T2<S,T>->R)
+Func.tuple3 : (S->T->R->P) -> (T3<S,T,R>->P)
+Func.tuple4 : (S->T->R->P->Q) -> (T4<S,T,R,P>->Q)
+
 Func.uncurry2 : (S->(T->R)) -> (S->T->R)
 Func.uncurry3 : (S->(T->(R->P))) -> (S->T->R->P)
 Func.uncurry4 : (S->(T->(R->(P->Q)))) -> (S->T->R->P->Q)
 
 // Array operations
 Func.lift : (S->T) -> (Array<S>->Array<T>) // Func.map.bind(f) :: Func.curry2(Func.map)(f)
+Func.count : Int -> Array<Int> // [for (i in 0...n) i], eg: 4 -> [0,1,2,3]
+Func.count2 : Int -> Int -> Array<T2<Int,Int>> // eg: 2 3 -> [(0,0),(0,1),(0,2),(1,0),(1,1),(1,2)]
 
 Func.map  : (S->T) -> Array<S> -> Array<T>
 Func.iter : (S->T) -> Array<S> -> Void // map with no return
+
+Func.imap : (Int->S) -> Int -> Array<S> // [for (i in 0...n) f(i)]
+Func.iiter : (Int->S) -> Int -> Void // same, but no return
+Func.imap2 : (Int->Int->S) -> Int -> (Int->Int) -> Array<S> // 2d-integer map, Int->Int used for sub-iteration count
+Func.iiter2 : (Int->Int->S) -> Int -> (Int->Int) -> Void // same, but no return
+
 Func.intersperse : S -> Array<S> -> Array<S>
 Func.intercalate : Array<S> -> Array<Array<S>> -> Array<S>
 Func.transpose : Array<Array<S>> -> Array<Array<S>>
@@ -375,6 +390,10 @@ Func.call1 : (S->T) -> S -> T
 Func.call2 : (S->T->R) -> S -> T -> R
 Func.call3 : (S->T->R->Q) -> S -> T -> R -> Q
 Func.call4 : (S->T->R->Q->P) -> S -> T -> R -> Q -> P
+
+Func.callT2 : (S->T->R) -> T2<S,T> -> R
+Func.callT3 : (S->T->R->P) -> T3<S,T,R> -> P
+Func.callT4 : (S->T->R->P->Q) -> T4<S,T,R,P> -> Q
 ```
 
 <a name="CoalescePrint"/>
@@ -401,3 +420,140 @@ lol
 ```
 
 with braces in red, and repeat counts in green.
+
+<a name="Shack"/>
+## Shack
+
+Uber build macro magic for stack (local-var) allocated vector, matrix and symmetric matrix types and operations.
+
+To use this, you should add ```implements goodies.Shack``` to your class.
+
+These types exist only at compile time, and are replaced with suitable (compilable) Haxe code using only local variables/parameters. As implied, these types can be assigned for member variables, local variables and function arguments (but not returns!)
+
+#### Types
+```cs
+    VN (eg V2, V3) Vector (column vector), uses N variables
+                  [ v0 ]
+       storage =  [ v1 ]
+                  [ v2 ]
+                          
+    SN (eg S2, S3) Symmetric Matrix (row=col=N), uses N(N+1)/2 variables
+                 [ s0, s1, s2 ]
+       storage = [ s1, s3, s4 ] (noticing duplicates)
+                 [ s2, s4, s5 ]
+       
+    MNxM (eg M2x3) Matrix (row=N, col=M) uses NM variables
+                 [ m0 m1 m2 ]
+       storage = [ m3 m4 m5 ]
+                 [ m6 m7 m8 ]
+                 
+    Scalar, used by Shack internals only, may appear in error messages.    
+```
+
+#### Constructors
+```cs
+    VN()       : VN; Zero-Vector
+    VN(x)      : VN; Constant-Vector
+    VN(x,y...) : VN; Vector with given values
+    
+    SN()        : SN; Identitity-Matrix
+    SN([all=]x) : SN; Constant-Matrix
+    SN(diag=x)  : SN; Matrix with constant diagonal
+    SN(x,y...)  : SN; Matrix with given values
+    
+    MNxM() : MNxM; .. etc (as for Symmetric Matrix)
+```
+
+#### Slices
+
+Slices are defined by numerical ranges of the type:
+```cs
+    i;      single index
+    i...j;  range of indices
+    all;    all valid indices
+```
+
+Ranges are used to select slices from vectors/matrices as follows:
+```cs
+   v(range) : Scalar (for single index), or Vector or suitable dimension otherwise.
+   s(range) : Select a range from matrix diagonal, type as per Vector slice
+   m(range) : ""
+   
+   s(range,range) : Select sub-matrix, Scalar for single element,
+                                       Symmetric Matrix of suitable dimension if appropriate
+                                       Matrix otherwise of suitable dimensions.
+
+   m(range,range) : Select sub-matrix, Scalar for single element, otherwise suitably sized Matrix.
+```
+
+#### Operators
+
+Shack supports arithmetic Float operators for the stack-allocated types, these operate on a component-wise basis and dimensions of operands must be compatible*. eg: an S3 may be multiplied component-wise with an M3x3 happily. Furthermore for assignments the RHS must be of the same dimension, and no greater in density. Eg, we can assign an S3 to an M3x3, but not an M3x3 to an S3.
+
+(*) In the case of component wise operations with a Scalar type, the Scalar will be promoted to the larger type using the default constructor, with the effect that component-wise addition of a Vector with a Scalar, will have that Scalar added to all entries of the Vector.
+
+In all cases, extra variables may be assigned and used to hold results of intermediate values to ensure any side-effects are not compounded, and that unecessary re-computation is avoided.
+
+#### Top-Level functions
+
+Shack defines top-level (unqualified) functions that may be used when types unify for Shack objects.
+
+As with operators, Scalars may be promoted so that ```lerp(V2(1,2), 3, 5) == lerp(V2(1,2), V2(3), V2(5))``` etc.
+
+```cs
+    string(A, tab="") : String; Convert Shack object to a (possibly multiline) string format
+    
+    lerp(x:A, y:A, t:A) : A; Linearly interpolate, component wise returning x*(1-t) + y*t
+    
+    dot(VN, VN) : Scalar; Scalar dot-product of two vectors
+    lsq(VN) : Scalar; Squared magnitude of a vector
+    length(VN) : Scalar; Magnitude of vector
+    unit(VN) : VN; Normalisation of vector, input is not modified.
+    perp(V2) : V2; 2D right-perpendicular vector, input is not modified.
+    
+    cross(Scalar, V2) : V2; scalar multiple of right-perpendicular
+    cross(V2, Scalar) : V2; scalar multiple of left-perpendicular
+    cross(V2, V2) : Scalar; 2D perp-dot product
+    cross(V3, V3) : V3;     3D cross product
+    
+    mul(A, B) : C; generalised true multiplication, valid as long as dimensions are compatible
+                     will return a lesser-type (eg: mul(M2x2,V2):V2) when possible.
+                     special case: Scalars are not promoted (Will be treat as 1x1 matrix only)
+    transpose(A) : A; generalised transpose, will return a lesser-type (eg: transpose(M1x2):V2) when possible.
+    determinant(S2|S3|M2x2|M3x3) : Scalar; matrix determinant (Restricted usage)
+    invert(S2|S3|M2x2|M3x3) : Int; in-place inversion, return Int denotes matrix ranks there were degenerate
+                                   and ignored. eg: if a 3x3 matrix has a zero middle row+col, it will be ignored
+                                   and matrix inverted as though middle row+col did not exist. Return integer would
+                                   in this case have the 1th bit set (return value = 2)
+    solve(Scalar|S2|S3, Scalar|V2|V3) : Void;  in-place linear-equation solving, as with inversion null-ranks will
+                                               be ignored.
+```
+
+#### Type-Inference shortcomings.
+
+Shack will largely infer types at the basic level, but it is restricted to the current Type being built in the macro system.
+
+If you have multiple types all using Shack that need to interopt, then you will have to tell Shack what the 'Type' of the object is (V2/S3 etc) as the default assigned type in Shack is Scalar.
+
+This can be done in two different ways, the first is that each Type has a corresponding top-level function (in lower-case) which acts similar to Haxe 3 ECheckType syntax for explict type casting, this may also be used to force another type in a Shack expression.
+```cs
+    var vel = V3(1,2,3);
+    trace(string(vel)); // 1 2 3 
+    trace(string(v2(vel))); // 1 2, type of vel in expression was coerced to V2
+```
+
+In this way, can indicate to Shack what the type of an unreachable definition is, eg: from another object.
+
+The other way, is to add a scoped type-declaration for a foreign identifier/field access
+```cs
+    @tag(V2) v.p; // declare in local-scope, that 'v.p' is a V2 object
+```
+
+
+<a name="Fixed16"/>
+### Fixed16
+
+Fixed16 provides 16.16 fixed point numbers which can largely be used as a (CAREFUL!) drop-in replacement for Float.
+All operators are defined, and work cross-platform.
+
+As with all abstract types, the only true limitation, is that if using Fixed16 as a type-perameter, the relevant code will not be able to correctly use the defined operator overloads.
