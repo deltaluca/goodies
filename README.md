@@ -14,6 +14,7 @@ Collection of little Haxe goodies I don't yet have an official place for.
 - [Func](#Func)    Functional programming module (Mostly revolving around extending Array type)
 - [CoalescePrint](#CoalescePrint) Neko/C++ Printing utility for coalesced logs.
 - [Shack](#Shack)  Stack allocated vectors/matrices via build macros.
+- [Fixed16](#Fixed16) Abstract type for 16.16 fixed-point numerical values and ops.
 
 <a name="FFT"/>
 ## FFT
@@ -547,3 +548,12 @@ The other way, is to add a scoped type-declaration for a foreign identifier/fiel
 ```cs
     @tag(V2) v.p; // declare in local-scope, that 'v.p' is a V2 object
 ```
+
+
+<a name="Fixed16"/>
+### Fixed16
+
+Fixed16 provides 16.16 fixed point numbers which can largely be used as a (CAREFUL!) drop-in replacement for Float.
+All operators are defined, and work cross-platform.
+
+As with all abstract types, the only true limitation, is that if using Fixed16 as a type-perameter, the relevant code will not be able to correctly use the defined operator overloads.
