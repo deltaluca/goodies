@@ -75,9 +75,11 @@ abstract Fixed16(Int) {
             var res:Float = fr*gr*0.0000152587890625;
             if (res >= 2147483648.0 || res < -2147483648.0) throw "Multiplication of Fixed16 values will overflow";
         #end
+        var f = f.raw();
+        var g = g.raw();
         var ff = f&0xffff; var fi = f>>16;
         var gf = g&0xffff; var gi = g>>16;
-        return RAW(((fi*gi)<<16) + fi*gf + ff*gi);
+        return RAW(((fi*gi)<<16) + fi*gf + ff*gi + ((ff*gf)>>>16));
     }
     @:commutative @:op(A*B) public inline static function mulf(f:Fixed16, g:Float) return mul(f, fromf(g));
     @:commutative @:op(A*B) public inline static function muli(f:Fixed16, g:Int)   return mul(f, fromi(g));
