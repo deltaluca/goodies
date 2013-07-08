@@ -12,17 +12,36 @@ class Func {
     public static inline function curry3<S,T,R,P>(f:S->T->R->P) return function (s:S) return function (t:T) return function (r:R) return f(s,t,r);
     public static inline function curry4<S,T,R,P,Q>(f:S->T->R->P->Q) return function (s:S) return function (t:T) return function (r:R) return function (p:P) return f(s,t,r,p);
 
+    public static inline function tuple2<S,T,R>(f:S->T->R) return function (x:T2<S,T>) return f(x.v0,x.v1);
+    public static inline function tuple3<S,T,R,P>(f:S->T->R->P) return function (x:T3<S,T,R>) return f(x.v0,x.v1,x.v2);
+    public static inline function tuple4<S,T,R,P,Q>(f:S->T->R->P->Q) return function (x:T4<S,T,R,P>) return f(x.v0,x.v1,x.v2,x.v3);
+
     public static inline function uncurry2<S,T,R>(f:S->(T->R)) return function (s:S, t:T) return f(s)(t);
     public static inline function uncurry3<S,T,R,P>(f:S->(T->(R->P))) return function (s:S, t:T, r:R) return f(s)(t)(r);
     public static inline function uncurry4<S,T,R,P,Q>(f:S->(T->(R->(P->Q)))) return function (s:S, t:T, r:R, p:P) return f(s)(t)(r)(p);
 
     public static inline function lift<S,T>(f:S->T):Array<S>->Array<T>
         return curry2(map)(f);
+    public static inline function count(x:Int):Array<Int>
+        return [for (i in 0...x) i];
+    public static inline function count2(x:Int, y:Int):Array<T2<Int,Int>>
+        return concat([for (i in 0...x) map(T2.make.bind(i), count(y))]);
 
     public static inline function map<S,T>(f:S->T, xs:Array<S>):Array<T>
         return [for (x in xs) f(x)];
     public static inline function iter<S,T>(f:S->T, xs:Array<S>):Void
         for (x in xs) f(x);
+    public static inline function imap<S>(f:Int->S, x:Int):Array<S>
+        return [for (i in 0...x) f(i)];
+    public static inline function imap2<S>(f:Int->Int->S, x:Int, y:Int->Int):Array<S> {
+        var rs = [];
+        for (i in 0...x) for (j in 0...y(i)) rs.push(f(i,j));
+        return rs;
+    }
+    public static inline function iiter<S>(f:Int->S, x:Int):Void
+        for (i in 0...x) f(i);
+    public static inline function iiter2<S>(f:Int->Int->S, x:Int, y:Int->Int):Void
+        for (i in 0...x) for (j in 0...y(i)) f(i,j);
     public static inline function intersperse<S>(x:S, xs:Array<S>):Array<S> {
         var ys = [];
         var fst = true;
@@ -379,4 +398,8 @@ class Func {
     public static inline function call2<S,T,R>(f:R->S->T, x:R, y:S) return f(x,y);
     public static inline function call3<S,T,R,Q>(f:R->S->T->Q, x:R, y:S, z:T) return f(x,y,z);
     public static inline function call4<S,T,R,Q,P>(f:R->S->T->Q->P, x:R, y:S, z:T, w:Q) return f(x,y,z,w);
+
+    public static inline function callT2<S,T,R>(f:S->T->R, x:T2<S,T>) return f(x.v0, x.v1);
+    public static inline function callT3<S,T,R,P>(f:S->T->R->P, x:T3<S,T,R>) return f(x.v0, x.v1, x.v2);
+    public static inline function callT4<S,T,R,P,Q>(f:S->T->R->P->Q, x:T4<S,T,R,P>) return f(x.v0, x.v1, x.v2, x.v3);
 }
