@@ -559,6 +559,7 @@ All operators are defined, and work cross-platform.
 
 As with all abstract types, the only true limitation, is that if using Fixed16 as a type-perameter, the relevant code will not be able to correctly use the defined operator overloads.
 
+<a name="BitFields"/>
 ### BitFields
 
 BitFields is a build macro for abstract types for creating bit-field integer types.
