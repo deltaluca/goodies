@@ -4,7 +4,7 @@
     "license":      "MIT",
     "tags":         ["cross"],
     "description":  "Assorted little things that feel silly in their own lib.",
-    "version":      "0.2.0",
-    "releasenote":  "Added more functional utils, tuples, SHACK stack-allocated vector/matrix magic, and Fixed16",
+    "version":      "0.2.1",
+    "releasenote":  "Fix for Fixed16 multiplication.",
     "contributors": ["deltaluca"]
 }

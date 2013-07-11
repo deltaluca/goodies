@@ -3,7 +3,7 @@ goodies
 
 Collection of little Haxe goodies I don't yet have an official place for.
 
-#### Table of Contents  
+#### Table of Contents
 - [FFT](#FFT)  Fast-Fourier Transforms for complex Vector data.
 - [Assert](#Assert)  Runtime Assertions via macros.
 - [MacroUtils](#MacroUtils)  Utilities to complement writing Macros.
@@ -15,6 +15,7 @@ Collection of little Haxe goodies I don't yet have an official place for.
 - [CoalescePrint](#CoalescePrint) Neko/C++ Printing utility for coalesced logs.
 - [Shack](#Shack)  Stack allocated vectors/matrices via build macros.
 - [Fixed16](#Fixed16) Abstract type for 16.16 fixed-point numerical values and ops.
+- [BitFields](#BitFields) Abstract type build macro for integer bit fields.
 
 <a name="FFT"/>
 ## FFT
@@ -73,7 +74,7 @@ MacroUtils.hasMeta(f:Field, name:String):Maybe<Array<Expr>>;
 // eg:
 // MacroUtils.field((macro var _:String), [APublic], "x");
 // MacroUtils.field(macro function():Int return 10, [APublic], "ten");
-// passing true for iface argument in the function example would cause the field to 
+// passing true for iface argument in the function example would cause the field to
 // be generated with an empty expression (for use in building interfaces).
 MacroUtils.field(e:Expr, access:Array<Access>, name:String, iface=false):Field;
 ```
@@ -94,41 +95,41 @@ abstract Maybe<T>(Null<T>) from Null<T> {
     // (Unsafely) extract underlying value.
     // If #debug is set, then this will give an exception when Maybe type is Nothing/null
     function extract():T;
-    
+
     // (Safely) extract underlying value, with a suitable default in case of Nothing/null
     function or(defaultValue:T):T;
-    
+
     // (Safely) apply function to underlying value, with a suitable default return in case of Nothing/null
     function runOr<S>(eval:T->S, defaultValue:S):S;
-    
+
     // (Safely) apply function to underyling value, with a suitable alternative call in case of Nothing/null
     function run<S>(eval:T->S, defaultEval:Void->S):S;
-    
+
     // Convert Maybe<T> to Array<T>
     // Just x  -> [x]
     // Nothing -> []
     function maybeToList():Array<T>;
-    
+
     // Convert singular Array<T> to Maybe<T>
     // [] -> Nothing
     // [x:xs] -> x
     static function listToMaybe(xs:Array<T>):Maybe<T>;
-    
+
     // Convert list of possibly null values to list of non-null elements.
     // eg with using: [null,10,20,null].catMaybes() = [10,20]
     // Can see implict casting coming in handy here :)
     static function catMaybes<T>(xs:Array<Maybe<T>>):Array<T>;
-    
+
     // Map function over list of values, collecting non-null results.
     // Maybe.mapMaybe(Maybe.listToMaybe, [[10],[],[],[20]]) = [10,20]
     static function mapMaybe<T,S>(eval:T->Maybe<S>, xs:Array<T>):Array<S>;
-    
+
     // Lift a standard N arg function into the Maybe monad
     static function liftM<T,S>(f:T->S):Maybe<T>->Maybe<S>;
     static function liftM2<T,S,R>(f:T->S->R):Maybe<T>->Maybe<S>->Maybe<R>;
     static function liftM3<T,S,R,Q>(f:T->S->R->Q):Maybe<T>->Maybe<S>->Maybe<R>->Maybe<Q>
     static function liftM4<T,S,R,Q,P>(f:T->S->R->Q->P):Maybe<T>->Maybe<S>->Maybe<R>->Maybe<Q>->Maybe<P>;
-    
+
     // Call a maybe functino with given arity.
     static function call<T>(f:Maybe<Void->T>):Maybe<T>;
     static function call2<T,S>(f:Maybe<T->S>, x:Maybe<T>):Maybe<S>;
@@ -143,18 +144,18 @@ any arguments not typed with Maybe<> are non-null on entry at runtime. Along wit
 class Main implements MaybeEnv {
    // Compile time error, String is nullable but not typed as Maybe<String>
    static function fail1(?x:String) {}
-   
+
    // Compile time error, argument's default value is null, but not typed with Maybe
    static function fail2(z:String=null) {}
-   
+
    static function testdyn(x:Int) {}
    static function teststat(x:String) {}
-   
+
    static function main() {
       // on dynamic platforms!! otherwise already a compiler error, this will give a runtime
       // error for passing null to an argument not typed with Maybe (in #debug)
       testdyn(null);
-      
+
       // always gives runtime error (in #debug)
       teststat(null);
    }
@@ -174,7 +175,7 @@ class Main implements LazyEnv {
       trace(x); // traces [0,1], noting that until x was accessed, the field was actually null.
       trace(x = []); // traces []
       trace(x = null); // traces [0,1]. We set x to null, and the lazy instantiation kicked back!
-      
+
       trace(y); // runtime error (in #debug), y has not been instantiated yet!
       trace(y = "hi"); // traces hi
       y = null;
@@ -194,12 +195,12 @@ class Main implements MaybeEnv implements LazyEnv {
       trace(x); // traces [0,1] as before
       trace(x = []); // traces [] as before
       trace(x = null); // runtime error, can't assign null to non-Maybe type! so not allowed to reset value.
-      
+
       trace(y); // runtime error as before
       trace(y = "hello"); // same as before
       y = null; // runtime error, can't assign null to non-Maybe type! y is 'never' allowed
                 // to be used uninstantiated by user.
-                
+
       trace(z); // Just("hi")
       trace(z = "lol"); // Just("lol")
       trace(z = null); // Just("hi")  // behaviour we had before introducing MaybeEnv to LazyEnv, can
@@ -220,7 +221,7 @@ class Pizza implements Builder {
    @:builder(react = function (topping) {
       trace('topping just changed to $topping');
    }) var topping:Topping = Peppers;
-   
+
    // Default values above (optional) are moved into top of constructor.
    public function new() {}
 }
@@ -416,7 +417,7 @@ results in (when console supports ANSI codes):
 ```cs
 [   Hello
     [   Hi there!   ]*2  ]*2
-lol    
+lol
 ```
 
 with braces in red, and repeat counts in green.
@@ -436,18 +437,18 @@ These types exist only at compile time, and are replaced with suitable (compilab
                   [ v0 ]
        storage =  [ v1 ]
                   [ v2 ]
-                          
+
     SN (eg S2, S3) Symmetric Matrix (row=col=N), uses N(N+1)/2 variables
                  [ s0, s1, s2 ]
        storage = [ s1, s3, s4 ] (noticing duplicates)
                  [ s2, s4, s5 ]
-       
+
     MNxM (eg M2x3) Matrix (row=N, col=M) uses NM variables
                  [ m0 m1 m2 ]
        storage = [ m3 m4 m5 ]
                  [ m6 m7 m8 ]
-                 
-    Scalar, used by Shack internals only, may appear in error messages.    
+
+    Scalar, used by Shack internals only, may appear in error messages.
 ```
 
 #### Constructors
@@ -455,12 +456,12 @@ These types exist only at compile time, and are replaced with suitable (compilab
     VN()       : VN; Zero-Vector
     VN(x)      : VN; Constant-Vector
     VN(x,y...) : VN; Vector with given values
-    
+
     SN()        : SN; Identitity-Matrix
     SN([all=]x) : SN; Constant-Matrix
     SN(diag=x)  : SN; Matrix with constant diagonal
     SN(x,y...)  : SN; Matrix with given values
-    
+
     MNxM() : MNxM; .. etc (as for Symmetric Matrix)
 ```
 
@@ -478,7 +479,7 @@ Ranges are used to select slices from vectors/matrices as follows:
    v(range) : Scalar (for single index), or Vector or suitable dimension otherwise.
    s(range) : Select a range from matrix diagonal, type as per Vector slice
    m(range) : ""
-   
+
    s(range,range) : Select sub-matrix, Scalar for single element,
                                        Symmetric Matrix of suitable dimension if appropriate
                                        Matrix otherwise of suitable dimensions.
@@ -502,20 +503,20 @@ As with operators, Scalars may be promoted so that ```lerp(V2(1,2), 3, 5) == ler
 
 ```cs
     string(A, tab="") : String; Convert Shack object to a (possibly multiline) string format
-    
+
     lerp(x:A, y:A, t:A) : A; Linearly interpolate, component wise returning x*(1-t) + y*t
-    
+
     dot(VN, VN) : Scalar; Scalar dot-product of two vectors
     lsq(VN) : Scalar; Squared magnitude of a vector
     length(VN) : Scalar; Magnitude of vector
     unit(VN) : VN; Normalisation of vector, input is not modified.
     perp(V2) : V2; 2D right-perpendicular vector, input is not modified.
-    
+
     cross(Scalar, V2) : V2; scalar multiple of right-perpendicular
     cross(V2, Scalar) : V2; scalar multiple of left-perpendicular
     cross(V2, V2) : Scalar; 2D perp-dot product
     cross(V3, V3) : V3;     3D cross product
-    
+
     mul(A, B) : C; generalised true multiplication, valid as long as dimensions are compatible
                      will return a lesser-type (eg: mul(M2x2,V2):V2) when possible.
                      special case: Scalars are not promoted (Will be treat as 1x1 matrix only)
@@ -538,7 +539,7 @@ If you have multiple types all using Shack that need to interopt, then you will 
 This can be done in two different ways, the first is that each Type has a corresponding top-level function (in lower-case) which acts similar to Haxe 3 ECheckType syntax for explict type casting, this may also be used to force another type in a Shack expression.
 ```cs
     var vel = V3(1,2,3);
-    trace(string(vel)); // 1 2 3 
+    trace(string(vel)); // 1 2 3
     trace(string(v2(vel))); // 1 2, type of vel in expression was coerced to V2
 ```
 
@@ -557,3 +558,28 @@ Fixed16 provides 16.16 fixed point numbers which can largely be used as a (CAREF
 All operators are defined, and work cross-platform.
 
 As with all abstract types, the only true limitation, is that if using Fixed16 as a type-perameter, the relevant code will not be able to correctly use the defined operator overloads.
+
+### BitFields
+
+BitFields is a build macro for abstract types for creating bit-field integer types.
+
+```cs
+    @:build(goodies.BitFields.run()) abstract X(Int) {
+        // Defined bits. Should be multiples of 2.
+        static var A = 1<<0;
+        static var B = 1<<2;
+        static var C = 1<<6;
+    }
+```
+
+The build macro will add ```inline public``` modifiers to the defined bits, and add proper type information. Additionally a ```zero``` field will be added corresponding to the empty bit-set.
+
+The build macro will add a nice ```toString``` implementation, and define the operators ```|,&,^,-,~``` as set operators union, intersection, symmetric difference, difference and complement. Partial order (based on inclusion) defined by operators ```<,<=,>,>=``` and the usual definitions of ```==,!=```.
+
+```cs
+    var set = X.zero; trace(set); // zero
+    set |= ~X.A; trace(set); // B|C
+    trace(X.B | X.C < set); // false
+    trace(X.B | X.C <= set); // true
+    trace([X.A < set, X.A > set]); // [false, false]
+```
