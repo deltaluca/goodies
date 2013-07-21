@@ -279,7 +279,7 @@ class Func {
     public static inline function find<S>(f:S->Bool, xs:Array<S>):Maybe<S> {
         var ret = null;
         for (x in xs) if (f(x)) { ret = x; break; }
-        return ret;
+        return new Maybe(ret);
     }
     public static inline function filter<S>(f:S->Bool, xs:Array<S>):Array<S> {
         var ys = [];
