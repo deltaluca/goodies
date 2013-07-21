@@ -16,6 +16,7 @@ Collection of little Haxe goodies I don't yet have an official place for.
 - [Shack](#Shack)  Stack allocated vectors/matrices via build macros.
 - [Fixed16](#Fixed16) Abstract type for 16.16 fixed-point numerical values and ops.
 - [BitFields](#BitFields) Abstract type build macro for integer bit fields.
+- [Lambdas](#Lambdas) Short lambdas build macro.
 
 <a name="FFT"/>
 ## FFT
@@ -559,6 +560,7 @@ All operators are defined, and work cross-platform.
 
 As with all abstract types, the only true limitation, is that if using Fixed16 as a type-perameter, the relevant code will not be able to correctly use the defined operator overloads.
 
+<a name="BitFields"/>
 ### BitFields
 
 BitFields is a build macro for abstract types for creating bit-field integer types.
@@ -582,4 +584,36 @@ The build macro will add a nice ```toString``` implementation, and define the op
     trace(X.B | X.C < set); // false
     trace(X.B | X.C <= set); // true
     trace([X.A < set, X.A > set]); // [false, false]
+```
+
+To allow additional fields that do not define bit fields (eg pre-combined bit fields) these can be prepended with @:compound to be ignored in toString etc, these will be completely ignored in the build macro.
+
+<a name="Lambdas"/>
+### Lambdas
+
+implementing goodies.Lambdas, contents of class will be able to use short lambda syntax described below.
+
+```cs
+    // Lambda with one type inferred argument
+    x => x + 2
+    // generates function (x) return x + 2;
+
+    // Lambda with many type inferred arguments
+    [x, y, z] => x + y + z
+    // generates function (x, y, z) return x + y + z;
+
+    // Partially typed short lambda
+    // typing an argument with _ declares it should be inferred
+    {x:Int, y:_, z:Array<Int>} => z.concat([x,y])
+    // generates function (x:Int, y, z:Array<Int>) return z.concat([x,y]);
+```
+
+To avoid clashing with Map literal syntax, any instance of a short lambda occuring directly inside an array literal should be bracketed.
+
+```cs
+    [x => x => x+2]
+    // generates [x => function (x) return x+2] which is a valid map litearl
+
+    [(x => x+2)]
+    // generates [function (x) return x + 2] which is a valid array literal
 ```

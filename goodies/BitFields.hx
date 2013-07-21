@@ -14,6 +14,7 @@ class BitFields {
         var total = 0;
         var fields = Context.getBuildFields();
         for (f in fields) {
+            if (MacroUtils.hasMeta(f, ":compound") != null) continue;
             switch (f.kind) {
             case FVar(t,e):
                 f.kind = FVar(self, macro __from($e));
@@ -68,7 +69,8 @@ class BitFields {
                 else {
                     var ret = "";
                     $b{[for (f in fields)
-                        macro if (a & __to($p{[f.name]}) != 0) {
+                        if (MacroUtils.hasMeta(f, ":compound") != null) macro {}
+                        else macro if (a & __to($p{[f.name]}) != 0) {
                             if (ret.length != 0) ret += "|";
                             ret += $v{f.name};
                         }
